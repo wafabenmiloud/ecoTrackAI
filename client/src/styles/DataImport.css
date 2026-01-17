@@ -1,0 +1,128 @@
+/* DataImport.css */
+.data-import-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  color: #2c7be5;
+}
+
+.tab.active {
+  color: #2c7be5;
+  border-bottom-color: #2c7be5;
+  font-weight: 500;
+}
+
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f9f9f9;
+  margin-bottom: 20px;
+}
+
+.dropzone.active {
+  border-color: #2c7be5;
+  background: #eef5ff;
+}
+
+.dropzone p {
+  margin: 0;
+  color: #666;
+}
+
+.dropzone .small {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+
+.manual-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.submit-btn {
+  background: #2c7be5;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #1a68d1;
+}
+
+.submit-btn:disabled {
+  background: #a0c4ff;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.message.success {
+  background: #e6f7e6;
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
+}
+
+.message.error {
+  background: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #c62828;
+}
