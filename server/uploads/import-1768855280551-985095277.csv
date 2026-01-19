@@ -1,0 +1,3 @@
+deviceId,value,unit,timestamp,cost,source
+696e892be94e97066f7cc6bb,45.67,kWh,2026-01-19T14:30:00.000Z,3.42,smart_meter
+696e892be94e97066f7cc6bb,38.21,kWh,2026-01-19T15:30:00.000Z,2.87,smart_meter

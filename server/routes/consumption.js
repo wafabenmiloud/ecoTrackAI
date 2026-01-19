@@ -1,112 +1,157 @@
 const express = require('express');
-const multer = require('multer');
-const csv = require('csv-parser');
-const fs = require('fs');
-const path = require('path');
-const auth = require('../middleware/auth');
-const Consumption = require('../models/Consumption');
-
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' });
+const { check } = require('express-validator');
+const { protect, authorize } = require('../middleware/auth');
+const energyController = require('../controllers/energyController');
+const upload = require('../config/multer');
 
-// Middleware to check if user is authenticated
-router.use(auth);
+// Protect all routes
+router.use(protect);
 
-// Manual data entry
-router.post('/manual', async (req, res) => {
-  try {
-    const { timestamp, value, unit = 'kWh' } = req.body;
-    const consumption = new Consumption({
-      userId: req.user.id,
-      timestamp: new Date(timestamp),
-      value: parseFloat(value),
-      unit,
-      source: 'manual'
-    });
-    await consumption.save();
-    res.status(201).json(consumption);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+/**
+ * @route   POST /api/v1/consumption
+ * @desc    Add energy consumption data
+ * @access  Private
+ */
+router.post(
+  '/',
+  [
+    check('deviceId', 'Device ID is required').not().isEmpty(),
+    check('value', 'Value is required and must be a number').isNumeric(),
+    check('unit', 'Unit is required').isIn(['Wh', 'kWh', 'MWh', 'J', 'MJ', 'GJ', 'BTU']),
+    check('timestamp', 'Invalid timestamp').optional().isISO8601()
+  ],
+  energyController.addConsumption
+);
 
-// CSV file upload
-router.post('/upload-csv', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
+/**
+ * @route   POST /api/v1/consumption/import/csv
+ * @desc    Import consumption data from CSV
+ * @access  Private
+ */
+router.post(
+  '/import/csv',
+  upload.single('file'),
+  energyController.importConsumptionCSV
+);
 
-  const results = [];
-  const errors = [];
-  let rowNumber = 0;
+/**
+ * @route   GET /api/v1/consumption
+ * @desc    Get consumption data with filters
+ * @access  Private
+ */
+router.get(
+  '/',
+  [
+    check('deviceId').optional().isMongoId(),
+    check('startDate').optional().isISO8601(),
+    check('endDate').optional().isISO8601(),
+    check('limit').optional().isInt({ min: 1, max: 1000 }),
+    check('page').optional().isInt({ min: 1 })
+  ],
+  energyController.getConsumption
+);
 
-  fs.createReadStream(req.file.path)
-    .pipe(csv())
-    .on('data', (data) => {
-      rowNumber++;
-      try {
-        // Validate required fields
-        if (!data.timestamp || !data.value) {
-          errors.push(`Row ${rowNumber}: Missing required fields`);
-          return;
-        }
-        
-        results.push({
-          userId: req.user.id,
-          timestamp: new Date(data.timestamp),
-          value: parseFloat(data.value),
-          unit: data.unit || 'kWh',
-          source: 'csv'
-        });
-      } catch (err) {
-        errors.push(`Error processing row ${rowNumber}: ${err.message}`);
-      }
-    })
-    .on('end', async () => {
-      try {
-        // Save all valid records
-        if (results.length > 0) {
-          await Consumption.insertMany(results);
-        }
-        
-        // Clean up uploaded file
-        fs.unlinkSync(req.file.path);
-        
-        res.json({
-          message: 'File processed successfully',
-          imported: results.length,
-          errors: errors.length > 0 ? errors : undefined
-        });
-      } catch (err) {
-        res.status(500).json({ error: 'Error saving data to database' });
-      }
-    });
-});
+/**
+ * @route   GET /api/v1/consumption/stats
+ * @desc    Get consumption statistics
+ * @access  Private
+ */
+router.get(
+  '/stats',
+  [
+    check('deviceId').optional().isMongoId(),
+    check('startDate').optional().isISO8601(),
+    check('endDate').optional().isISO8601(),
+    check('groupBy').optional().isIn(['hour', 'day', 'week', 'month', 'year'])
+  ],
+  energyController.getConsumptionStats
+);
 
-// API import (placeholder for future implementation)
-router.post('/api-import', async (req, res) => {
-  // Implementation for API-based data import
-  // This would connect to an external API and fetch consumption data
-  res.status(501).json({ message: 'API import not implemented yet' });
-});
+/**
+ * @route   GET /api/v1/consumption/anomalies
+ * @desc    Get consumption anomalies
+ * @access  Private
+ */
+router.get('/anomalies', energyController.getAnomalies);
 
-// Get user's consumption data
-router.get('/', async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-    const query = { userId: req.user.id };
-    
-    if (startDate) query.timestamp = { $gte: new Date(startDate) };
-    if (endDate) {
-      query.timestamp = query.timestamp || {};
-      query.timestamp.$lte = new Date(endDate);
-    }
-    
-    const data = await Consumption.find(query).sort({ timestamp: 1 });
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+/**
+ * @route   GET /api/v1/consumption/predictions
+ * @desc    Get consumption predictions
+ * @access  Private
+ */
+router.get('/predictions', energyController.getPredictions);
+
+/**
+ * @route   GET /api/v1/consumption/export
+ * @desc    Export consumption data as CSV
+ * @access  Private
+ */
+router.get('/export', energyController.exportConsumption);
+
+/**
+ * @route   DELETE /api/v1/consumption/:id
+ * @desc    Delete consumption record
+ * @access  Private
+ */
+router.delete('/:id', energyController.deleteConsumption);
+
+/**
+ * @route   GET /api/v1/consumption/anomalies
+ * @desc    Get consumption anomalies
+ * @access  Private
+ */
+router.get(
+  '/anomalies',
+  [
+    check('deviceId').optional().isMongoId(),
+    check('startDate').optional().isISO8601(),
+    check('endDate').optional().isISO8601(),
+    check('severity').optional().isIn(['low', 'medium', 'high']),
+    check('status').optional().isIn(['pending', 'confirmed', 'resolved', 'false_positive'])
+  ],
+  energyController.getAnomalies
+);
+
+/**
+ * @route   GET /api/v1/consumption/predictions
+ * @desc    Get consumption predictions
+ * @access  Private
+ */
+router.get(
+  '/predictions',
+  [
+    check('deviceId').optional().isMongoId(),
+    check('horizon').optional().isIn(['1h', '24h', '7d', '30d', '90d']),
+    check('confidence').optional().isFloat({ min: 0.5, max: 0.99 })
+  ],
+  energyController.getPredictions
+);
+
+/**
+ * @route   GET /api/v1/consumption/export
+ * @desc    Export consumption data
+ * @access  Private
+ */
+router.get(
+  '/export',
+  [
+    check('format').isIn(['csv', 'json', 'xlsx']),
+    check('deviceId').optional().isMongoId(),
+    check('startDate').optional().isISO8601(),
+    check('endDate').optional().isISO8601()
+  ],
+  energyController.exportConsumption
+);
+
+/**
+ * @route   DELETE /api/v1/consumption/:id
+ * @desc    Delete consumption record
+ * @access  Private
+ */
+router.delete(
+  '/:id',
+  energyController.deleteConsumption
+);
 
 module.exports = router;

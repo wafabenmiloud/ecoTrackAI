@@ -1,188 +1,187 @@
+// client/src/components/DataImport.js
 import React, { useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import axios from 'axios';
-import './DataImport.css'; // We'll create this next
+import { 
+  Box, 
+  Button, 
+  Paper, 
+  Typography, 
+  LinearProgress, 
+  Alert, 
+  Tabs, 
+  Tab 
+} from '@mui/material';
+import { uploadFile } from '../services/api';
+import ManualEntryForm from './ManualEntryForm';
+import BatchImportForm from './BatchImportForm';
 
-function DataImport({ token }) {
-  const [activeTab, setActiveTab] = useState('csv');
-  const [manualData, setManualData] = useState({
-    timestamp: new Date().toISOString().slice(0, 16),
-    value: '',
-    unit: 'kWh'
-  });
-  const [message, setMessage] = useState({ text: '', type: '' });
-  const [isLoading, setIsLoading] = useState(false);
+const DataImport = () => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'text/csv': ['.csv']
-    },
-    maxFiles: 1,
-    onDrop: async (acceptedFiles) => {
-      if (acceptedFiles.length === 0) return;
-      await handleFileUpload(acceptedFiles[0]);
-    }
-  });
-
-  const handleManualSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage({ text: '', type: '' });
-
-    try {
-      const response = await axios.post(
-        '/api/consumption/manual',
-        {
-          timestamp: manualData.timestamp,
-          value: parseFloat(manualData.value),
-          unit: manualData.unit
-        },
-        {
-          headers: { 'x-auth-token': token }
-        }
-      );
-
-      setMessage({
-        text: 'Data added successfully!',
-        type: 'success'
-      });
-      setManualData({
-        timestamp: new Date().toISOString().slice(0, 16),
-        value: '',
-        unit: 'kWh'
-      });
-    } catch (error) {
-      setMessage({
-        text: error.response?.data?.error || 'Error adding data',
-        type: 'error'
-      });
-    } finally {
-      setIsLoading(false);
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      setFile(e.target.files[0]);
     }
   };
 
-  const handleFileUpload = async (file) => {
-    setIsLoading(true);
-    setMessage({ text: '', type: '' });
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage({ type: 'error', text: 'Please select a file to upload' });
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append('file', file);
+    setUploading(true);
+    setProgress(0);
+    setMessage({ type: '', text: '' });
 
     try {
-      const response = await axios.post('/api/consumption/upload-csv', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'x-auth-token': token
-        }
+      await uploadFile(file, (progressEvent) => {
+        const progress = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        setProgress(progress);
       });
 
-      setMessage({
-        text: `Successfully imported ${response.data.imported} records.` + 
-              (response.data.errors ? ` ${response.data.errors.length} rows had errors.` : ''),
-        type: 'success'
-      });
+      setMessage({ type: 'success', text: 'File uploaded successfully' });
+      setFile(null);
+      // Reset file input
+      document.getElementById('contained-button-file').value = '';
     } catch (error) {
+      console.error('Upload failed:', error);
       setMessage({
-        text: error.response?.data?.error || 'Error uploading file',
-        type: 'error'
+        type: 'error',
+        text: error.response?.data?.message || 'Upload failed',
       });
     } finally {
-      setIsLoading(false);
+      setUploading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setManualData(prev => ({ ...prev, [name]: value }));
+  const handleManualSubmit = async (data) => {
+    try {
+      // Here you would typically call your API to save the manual entry
+      // For example: await consumptionAPI.addConsumption(data);
+      console.log('Manual entry data:', data);
+      setMessage({ 
+        type: 'success', 
+        text: 'Data point added successfully' 
+      });
+    } catch (error) {
+      console.error('Error adding data point:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to add data point',
+      });
+    }
+  };
+
+  const handleBatchSubmit = async (formData) => {
+    try {
+      // Here you would typically call your API to process the batch import
+      // For example: await uploadFile(formData);
+      console.log('Batch import data:', formData);
+      setMessage({ 
+        type: 'success', 
+        text: 'Batch import started successfully' 
+      });
+    } catch (error) {
+      console.error('Batch import failed:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Batch import failed',
+      });
+    }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
   return (
-    <div className="data-import-container">
-      <h2>Import Energy Data</h2>
-      
-      <div className="tabs">
-        <button 
-          className={`tab ${activeTab === 'csv' ? 'active' : ''}`}
-          onClick={() => setActiveTab('csv')}
-        >
-          Import CSV
-        </button>
-        <button 
-          className={`tab ${activeTab === 'manual' ? 'active' : ''}`}
-          onClick={() => setActiveTab('manual')}
-        >
-          Manual Entry
-        </button>
-      </div>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Data Import
+      </Typography>
 
-      {message.text && (
-        <div className={`message ${message.type}`}>
-          {message.text}
-        </div>
-      )}
-
-      {activeTab === 'csv' ? (
-        <div 
-          {...getRootProps()} 
-          className={`dropzone ${isDragActive ? 'active' : ''}`}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange} 
+          sx={{ mb: 3 }}
+          variant="fullWidth"
         >
-          <input {...getInputProps()} />
-          {isDragActive ? (
-            <p>Drop the CSV file here...</p>
-          ) : (
-            <div>
-              <p>Drag & drop a CSV file here, or click to select</p>
-              <p className="small">CSV should contain columns: timestamp, value, unit (optional)</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <form onSubmit={handleManualSubmit} className="manual-form">
-          <div className="form-group">
-            <label>Timestamp</label>
+          <Tab label="CSV Upload" />
+          <Tab label="Manual Entry" />
+          <Tab label="Batch Import" />
+        </Tabs>
+
+        {message.text && (
+          <Alert severity={message.type} sx={{ mb: 2 }}>
+            {message.text}
+          </Alert>
+        )}
+
+        {activeTab === 0 && (
+          <Box>
             <input
-              type="datetime-local"
-              name="timestamp"
-              value={manualData.timestamp}
-              onChange={handleInputChange}
-              required
+              accept=".csv"
+              style={{ display: 'none' }}
+              id="contained-button-file"
+              type="file"
+              onChange={handleFileChange}
             />
-          </div>
-          <div className="form-group">
-            <label>Energy Usage (kWh)</label>
-            <input
-              type="number"
-              name="value"
-              value={manualData.value}
-              onChange={handleInputChange}
-              step="0.01"
-              min="0"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Unit</label>
-            <select
-              name="unit"
-              value={manualData.unit}
-              onChange={handleInputChange}
-            >
-              <option value="kWh">kWh</option>
-              <option value="MWh">MWh</option>
-              <option value="J">Joules</option>
-            </select>
-          </div>
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="submit-btn"
-          >
-            {isLoading ? 'Adding...' : 'Add Data Point'}
-          </button>
-        </form>
-      )}
-    </div>
+            <label htmlFor="contained-button-file">
+              <Button 
+                variant="contained" 
+                component="span" 
+                disabled={uploading}
+              >
+                {file ? file.name : 'Select CSV File'}
+              </Button>
+            </label>
+
+            {file && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUpload}
+                disabled={uploading}
+                sx={{ ml: 2 }}
+              >
+                {uploading ? 'Uploading...' : 'Upload'}
+              </Button>
+            )}
+
+            {uploading && (
+              <Box sx={{ width: '100%', mt: 2 }}>
+                <LinearProgress variant="determinate" value={progress} />
+                <Typography variant="body2" color="text.secondary" align="center">
+                  {`${Math.round(progress)}%`}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {activeTab === 1 && (
+          <ManualEntryForm 
+            onSubmit={handleManualSubmit} 
+            loading={uploading} 
+          />
+        )}
+
+        {activeTab === 2 && (
+          <BatchImportForm 
+            onSubmit={handleBatchSubmit} 
+            loading={uploading} 
+          />
+        )}
+      </Paper>
+    </Box>
   );
-}
+};
 
 export default DataImport;

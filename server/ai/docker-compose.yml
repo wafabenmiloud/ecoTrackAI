@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongo:27017/ecotrackai
+      - JWT_SECRET=your_jwt_secret
+      - ML_SERVICE_URL=http://ml-service:8000
+    depends_on:
+      - mongo
+      - ml-service
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  ml-service:
+    build: ./ai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  mongodb_data:
