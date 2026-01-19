@@ -120,5 +120,3 @@ EcoTrackAI is a comprehensive energy monitoring and management system that lever
 - Input validation and sanitization
 - Audit logging for sensitive operations
 - Rate limiting on authentication endpoints
-
-Would you like me to elaborate on any specific aspect of the application logic or provide more details about a particular feature?
