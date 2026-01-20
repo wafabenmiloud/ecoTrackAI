@@ -1,40 +1,52 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminTopbar from '../components/admin/AdminTopbar';
+import '../styles/Admin.css';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
+
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [location]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  // Close sidebar on mobile when clicking outside
+  const handleBackdropClick = () => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="admin-container">
       {/* Sidebar */}
-      <div
-        className={`${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-30 w-64 transition duration-300 transform bg-gray-900 lg:translate-x-0 lg:static lg:inset-0`}
-      >
+      <div className={`admin-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
         <AdminSidebar />
       </div>
 
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 transition-opacity bg-black opacity-50 lg:hidden"
-          onClick={toggleSidebar}
+        <div 
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
+          onClick={handleBackdropClick}
         ></div>
       )}
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className={`admin-main ${!sidebarOpen ? 'expanded' : ''}`}>
         {/* Topbar */}
-        <AdminTopbar onMenuClick={toggleSidebar} />
+        <AdminTopbar onMenuClick={toggleSidebar} sidebarOpen={sidebarOpen} />
 
         {/* Main content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+        <main className="admin-content">
           <div className="container px-6 py-8 mx-auto">
             <Outlet />
           </div>

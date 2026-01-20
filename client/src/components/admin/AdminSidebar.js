@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FiHome, 
@@ -8,11 +8,14 @@ import {
   FiSettings, 
   FiHelpCircle, 
   FiChevronDown, 
-  FiChevronUp,
+  FiChevronRight,
   FiActivity,
   FiServer,
   FiAlertCircle,
-  FiList ,FiUser
+  FiList,
+  FiUser,
+  FiPower,
+  FiChevronLeft
 } from 'react-icons/fi';
 
 const AdminSidebar = () => {
@@ -20,8 +23,36 @@ const AdminSidebar = () => {
   const [openMenus, setOpenMenus] = useState({
     users: false,
     devices: false,
-    system: false
+    system: false,
+    analytics: false,
+    support: false
   });
+
+  // Auto-expand menu based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    const newOpenMenus = { ...openMenus };
+    
+    // Close all menus first
+    Object.keys(newOpenMenus).forEach(key => {
+      newOpenMenus[key] = false;
+    });
+
+    // Open the relevant menu based on current path
+    if (path.startsWith('/admin/users')) {
+      newOpenMenus.users = true;
+    } else if (path.startsWith('/admin/devices')) {
+      newOpenMenus.devices = true;
+    } else if (path.startsWith('/admin/system')) {
+      newOpenMenus.system = true;
+    } else if (path.startsWith('/admin/analytics')) {
+      newOpenMenus.analytics = true;
+    } else if (path.startsWith('/admin/support')) {
+      newOpenMenus.support = true;
+    }
+
+    setOpenMenus(newOpenMenus);
+  }, [location.pathname]);
 
   const toggleMenu = (menu) => {
     setOpenMenus(prev => ({
@@ -39,13 +70,13 @@ const AdminSidebar = () => {
   const menuItems = [
     {
       title: 'Dashboard',
-      icon: <FiHome className="w-5 h-5" />,
+      icon: <FiHome />,
       path: '/admin',
       exact: true
     },
     {
       title: 'Users',
-      icon: <FiUsers className="w-5 h-5" />,
+      icon: <FiUsers />,
       path: '/admin/users',
       subItems: [
         { title: 'All Users', path: '/admin/users' },
@@ -54,7 +85,7 @@ const AdminSidebar = () => {
     },
     {
       title: 'Devices',
-      icon: <FiLayers className="w-5 h-5" />,
+      icon: <FiLayers />,
       path: '/admin/devices',
       subItems: [
         { title: 'All Devices', path: '/admin/devices' },
@@ -63,75 +94,85 @@ const AdminSidebar = () => {
     },
     {
       title: 'Analytics',
-      icon: <FiBarChart2 className="w-5 h-5" />,
-      path: '/admin/analytics'
+      icon: <FiBarChart2 />,
+      path: '/admin/analytics',
+      subItems: [
+        { title: 'Overview', path: '/admin/analytics' },
+        { title: 'Reports', path: '/admin/analytics/reports' },
+        { title: 'Exports', path: '/admin/analytics/exports' }
+      ]
     },
     {
       title: 'System',
-      icon: <FiServer className="w-5 h-5" />,
+      icon: <FiServer />,
       path: '/admin/system',
       subItems: [
         { title: 'Status', path: '/admin/system/status' },
-        { title: 'Audit Logs', path: '/admin/system/audit-logs' }
+        { title: 'Audit Logs', path: '/admin/system/audit-logs' },
+        { title: 'Backup', path: '/admin/system/backup' },
+        { title: 'Updates', path: '/admin/system/updates' }
       ]
     },
     {
       title: 'Support',
-      icon: <FiHelpCircle className="w-5 h-5" />,
-      path: '/admin/support'
+      icon: <FiHelpCircle />,
+      path: '/admin/support',
+      subItems: [
+        { title: 'Tickets', path: '/admin/support/tickets' },
+        { title: 'Knowledge Base', path: '/admin/support/knowledge-base' },
+        { title: 'Contact Us', path: '/admin/support/contact' }
+      ]
     },
     {
       title: 'Settings',
-      icon: <FiSettings className="w-5 h-5" />,
+      icon: <FiSettings />,
       path: '/admin/settings'
     }
   ];
 
   return (
-    <div className="fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white">
-      <div className="flex items-center justify-center h-16 px-6 bg-gray-800">
-        <h1 className="text-xl font-semibold">EcoTrack AI</h1>
+    <div className="admin-sidebar">
+      <div className="sidebar-header">
+        <Link to="/admin" className="sidebar-logo">
+          <FiServer className="text-blue-400" />
+          <span>EcoTrack AI</span>
+        </Link>
       </div>
-      <nav className="mt-6">
+      
+      <div className="sidebar-menu">
+        <div className="menu-category">Main</div>
+        
         {menuItems.map((item) => (
-          <div key={item.title} className="px-2">
+          <div key={item.title}>
             {item.subItems ? (
               <>
                 <button
                   onClick={() => toggleMenu(item.title.toLowerCase())}
-                  className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    isActive(item.path, false) 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`menu-item ${openMenus[item.title.toLowerCase()] ? 'active' : ''}`}
                 >
-                  <div className="flex items-center">
-                    <span className="mr-3">{item.icon}</span>
-                    <span>{item.title}</span>
-                  </div>
+                  <i>{item.icon}</i>
+                  <span>{item.title}</span>
                   {openMenus[item.title.toLowerCase()] ? (
-                    <FiChevronUp className="w-4 h-4" />
+                    <FiChevronDown className="ml-auto" />
                   ) : (
-                    <FiChevronDown className="w-4 h-4" />
+                    <FiChevronRight className="ml-auto" />
                   )}
                 </button>
+                
                 <div 
                   className={`overflow-hidden transition-all duration-200 ${
                     openMenus[item.title.toLowerCase()] ? 'max-h-96' : 'max-h-0'
                   }`}
                 >
-                  <div className="py-1 pl-12 pr-2">
+                  <div className="pl-4">
                     {item.subItems.map((subItem) => (
                       <Link
                         key={subItem.title}
                         to={subItem.path}
-                        className={`block px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
-                          isActive(subItem.path, true)
-                            ? 'bg-blue-700 text-white'
-                            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                        }`}
+                        className={`menu-item ${isActive(subItem.path, true) ? 'active' : ''}`}
+                        style={{ paddingLeft: '2.5rem' }}
                       >
-                        {subItem.title}
+                        <span>{subItem.title}</span>
                       </Link>
                     ))}
                   </div>
@@ -140,28 +181,33 @@ const AdminSidebar = () => {
             ) : (
               <Link
                 to={item.path}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors duration-200 ${
-                  isActive(item.path, item.exact !== false)
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`}
+                className={`menu-item ${isActive(item.path, item.exact !== false) ? 'active' : ''}`}
               >
-                <span className="mr-3">{item.icon}</span>
+                <i>{item.icon}</i>
                 <span>{item.title}</span>
               </Link>
             )}
           </div>
         ))}
-      </nav>
-      <div className="absolute bottom-0 w-full p-4 bg-gray-800">
-        <div className="flex items-center">
-          <div className="w-10 h-10 overflow-hidden bg-gray-600 rounded-full">
-            <FiUser className="w-full h-full p-2 text-gray-300" />
+      </div>
+      
+      <div className="mt-auto p-4 border-t border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+              <FiUser size={16} />
+            </div>
+            <div className="ml-3">
+              <div className="text-sm font-medium text-white">Admin User</div>
+              <div className="text-xs text-gray-400">Administrator</div>
+            </div>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-gray-400">Administrator</p>
-          </div>
+          <button 
+            className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700"
+            title="Sign out"
+          >
+            <FiPower size={18} />
+          </button>
         </div>
       </div>
     </div>

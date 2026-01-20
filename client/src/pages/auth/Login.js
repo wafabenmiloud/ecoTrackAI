@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Input from '../../components/form/Input';
-import Button from '../../components/form/Button';
+import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
+import '../../styles/Auth.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -83,62 +83,94 @@ const Login = () => {
   };
 
   return (
-  <div>
-      <div>
-        <div>
-          <h2>Sign in to your account</h2>
-          <p>
-            Or <Link to="/register">create a new account</Link>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1 className="auth-title">Sign in to your account</h1>
+          <p className="auth-subtitle">
+            Don't have an account?{' '}
+            <Link to="/register">Create one now</Link>
           </p>
         </div>
 
-        {authError && (
-          <div>
-            <div>
-              <div>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p>{authError}</p>
-              </div>
-            </div>
+        {(authError || loginError) && (
+          <div className="error-message">
+            <FiAlertCircle className="error-icon" />
+            {authError || loginError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <Input
-            label="Email address"
-            id="email"
-            name="email"
-            type="email"
-            required
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            placeholder="you@example.com"
-          />
-
-          <div>
-            <label htmlFor="password">Password</label>
-            <Link to="/forgot-password">Forgot your password?</Link>
-
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              placeholder="••••••••"
-            />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="email">Email</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="form-input"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="you@example.com"
+              />
+              <FiMail style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9CA3AF'
+              }} />
+            </div>
+            {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
           </div>
 
-          <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
-            Sign in
-          </Button>
+          <div className="form-group">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label className="form-label" htmlFor="password">Password</label>
+              <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: '#3B82F6', textDecoration: 'none' }}>
+                Forgot password?
+              </Link>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                className="form-input"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="••••••••"
+              />
+              <FiLock style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9CA3AF'
+              }} />
+            </div>
+            {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
+          </div>
+
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="loading-spinner"></span>
+                Signing in...
+              </>
+            ) : 'Sign in'}
+          </button>
+
+          <div className="form-footer">
+            Don't have an account?{' '}
+            <Link to="/register">Create one now</Link>
+          </div>
         </form>
       </div>
     </div>
