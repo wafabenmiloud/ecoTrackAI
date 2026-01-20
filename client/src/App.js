@@ -1,77 +1,141 @@
 // client/src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
-import { theme as customTheme } from './theme/theme';
-import { getDesignTokens } from './theme/palette';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import Layout from './Layout/MainLayout';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import DataImport from './components/DataImport';
-import AdminDashboard from './components/AdminDashboard';
-import Analytics from './components/Analytics';
-import Settings from './components/Settings';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/auth/PrivateRoute';
+import AdminRoute from './components/auth/AdminRoute';
 
-const AppContent = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
+// Auth Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      
-      {/* Public routes */}
-      <Route path="/login" element={
-        isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
-      } />
-      <Route path="/register" element={
-        isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
-      } />
+// Layouts
+import MainLayout from './Layouts/MainLayout';
+import AdminLayout from './Layouts/AdminLayout';
 
-      {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/import" element={<DataImport />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
-          
-          {/* Admin only routes */}
-          <Route element={<ProtectedRoute adminOnly />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Route>
-        </Route>
-      </Route>
+// User Pages
+import Dashboard from './pages/dashboard/Dashboard';
+import Profile from './pages/user/Profile';
+import Settings from './pages/user/Settings';
+import ConsumptionHistory from './pages/consumption/ConsumptionHistory';
+import ConsumptionStats from './pages/consumption/ConsumptionStats';
+import AnomalyDetection from './pages/consumption/AnomalyDetection';
+import Predictions from './pages/consumption/Predictions';
+import SupportTickets from './pages/support/SupportTickets';
+import TicketDetails from './pages/support/TicketDetails';
 
-      {/* 404 route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-};
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/users/UserManagement';
+import UserDetails from './pages/admin/users/UserDetails';
+import DeviceManagement from './pages/admin/devices/DeviceManagement';
+import DeviceDetails from './pages/admin/devices/DeviceDetails';
+import SystemAnalytics from './pages/admin/analytics/SystemAnalytics';
+import AuditLogs from './pages/admin/system/AuditLogs';
+import SystemStatus from './pages/admin/system/SystemStatus';
+import SupportTickets from './pages/admin/support/SupportTickets';
+import TicketDetails from './pages/admin/support/TicketDetails';
+
+// Nested Layout Components
+const UserLayout = () => (
+  <MainLayout>
+    <Outlet />
+  </MainLayout>
+);
+
+const AdminLayoutWrapper = () => (
+  <AdminLayout>
+    <Outlet />
+  </AdminLayout>
+);
 
 function App() {
-  const mode = 'light'; // You can make this dynamic with a theme toggle
-
-  const theme = React.useMemo(
-    () => createTheme(getDesignTokens(mode)),
-    [mode],
-  );
-
   return (
-    <ThemeProvider theme={theme}>
-      <StyledThemeProvider theme={customTheme}>
-        <CssBaseline />
-        <AuthProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </AuthProvider>
-      </StyledThemeProvider>
-    </ThemeProvider>
+    <Router>
+      <AuthProvider>
+        <div className="App">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+            
+            {/* Protected User Routes */}
+            <Route element={
+              <PrivateRoute>
+                <UserLayout />
+              </PrivateRoute>
+            }>
+              <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* User Profile & Settings */}
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              
+              {/* Consumption Management */}
+              <Route path="/consumption" element={<ConsumptionHistory />} />
+              <Route path="/consumption/stats" element={<ConsumptionStats />} />
+              <Route path="/consumption/anomalies" element={<AnomalyDetection />} />
+              <Route path="/consumption/predictions" element={<Predictions />} />
+              
+              {/* Support */}
+              <Route path="/support" element={<SupportTickets />} />
+              <Route path="/support/tickets/:ticketId" element={<TicketDetails />} />
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute>
+                  <AdminRoute>
+                    <AdminLayoutWrapper />
+                  </AdminRoute>
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              
+              {/* User Management */}
+              <Route path="users" element={<UserManagement />} />
+              <Route path="users/:userId" element={<UserDetails />} />
+              
+              {/* Device Management */}
+              <Route path="devices" element={<DeviceManagement />} />
+              <Route path="devices/:deviceId" element={<DeviceDetails />} />
+              
+              {/* Analytics */}
+              <Route path="analytics" element={<SystemAnalytics />} />
+              
+              {/* System */}
+              <Route path="system/status" element={<SystemStatus />} />
+              <Route path="system/audit-logs" element={<AuditLogs />} />
+              
+              {/* Support */}
+              <Route path="support" element={<AdminSupportTickets />} />
+              <Route path="support/tickets/:ticketId" element={<AdminTicketDetails />} />
+            </Route>
+            
+            {/* Default route */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* 404 Not Found */}
+            <Route path="*" element={
+              <PrivateRoute>
+                <MainLayout>
+                  <div className="flex items-center justify-center h-full">
+                    <h1 className="text-2xl font-bold">404 - Page Not Found</h1>
+                  </div>
+                </MainLayout>
+              </PrivateRoute>
+            } />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
 
