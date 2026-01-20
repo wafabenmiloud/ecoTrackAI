@@ -100,12 +100,12 @@ const Register = () => {
   };
 
   return (
-   <div className="register-page">
-  <div className="register-card">
+   <div>
+  <div >
 
     <div>
-      <h2 className="register-title">Create your account</h2>
-      <p className="register-subtitle">
+      <h2>Create your account</h2>
+      <p >
         Or <Link to="/login">sign in</Link>
       </p>
     </div>

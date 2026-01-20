@@ -15,28 +15,51 @@ import ResetPassword from './pages/auth/ResetPassword';
 import MainLayout from './Layouts/MainLayout';
 import AdminLayout from './Layouts/AdminLayout';
 
-// User Pages
-import Dashboard from './pages/dashboard/Dashboard';
-import Profile from './pages/user/Profile';
-import Settings from './pages/user/Settings';
+// Consumption Pages
 import ConsumptionHistory from './pages/consumption/ConsumptionHistory';
 import ConsumptionStats from './pages/consumption/ConsumptionStats';
+import AddConsumption from './pages/consumption/AddConsumption';
 import AnomalyDetection from './pages/consumption/AnomalyDetection';
+import DataTransfer from './pages/consumption/DataTransfer';
 import Predictions from './pages/consumption/Predictions';
+
+
+// Dashboard Pages
+import Dashboard from './pages/dashboard/Dashboard';
+
+// Notifications Pages
+import Notifications from './pages/notifications/Notifications';
+
+// User Pages
+import Profile from './pages/profile/Profile';
+import Settings from './pages/settings/Settings';
 import SupportTickets from './pages/support/SupportTickets';
 import TicketDetails from './pages/support/TicketDetails';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+
+// Admin Pages - users
 import UserManagement from './pages/admin/users/UserManagement';
 import UserDetails from './pages/admin/users/UserDetails';
+import UserAdd from './pages/admin/users/CreateUser';
+
+// Admin Pages - devices
 import DeviceManagement from './pages/admin/devices/DeviceManagement';
 import DeviceDetails from './pages/admin/devices/DeviceDetails';
+import DeviceAdd from './pages/admin/devices/CreateDevice';
+import DeviceList from './pages/admin/devices/DeviceList';
+
+// Admin Pages - analytics
 import SystemAnalytics from './pages/admin/analytics/SystemAnalytics';
+
+// Admin Pages - system
 import AuditLogs from './pages/admin/system/AuditLogs';
 import SystemStatus from './pages/admin/system/SystemStatus';
-import SupportTickets from './pages/admin/support/SupportTickets';
-import TicketDetails from './pages/admin/support/TicketDetails';
+
+// Admin Pages - support
+import AdminSupportTickets from './pages/admin/support/SupportTickets';
+import AdminTicketDetails from './pages/admin/support/TicketDetails';
 
 // Nested Layout Components
 const UserLayout = () => (
@@ -80,6 +103,7 @@ function App() {
               <Route path="/consumption/stats" element={<ConsumptionStats />} />
               <Route path="/consumption/anomalies" element={<AnomalyDetection />} />
               <Route path="/consumption/predictions" element={<Predictions />} />
+              <Route path="/consumption/transfer" element={<DataTransfer />} />
               
               {/* Support */}
               <Route path="/support" element={<SupportTickets />} />
